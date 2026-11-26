@@ -1,0 +1,9 @@
+name	url	md5	unpack	dest
+ctrl_matrix	https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2560nnn/GSM2560248/suppl/GSM2560248_2.1.mtx.gz	NA	none	data/raw/geo
+ctrl_barcodes	https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2560nnn/GSM2560248/suppl/GSM2560248_barcodes.tsv.gz	NA	none	data/raw/geo
+stim_matrix	https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2560nnn/GSM2560249/suppl/GSM2560249_2.2.mtx.gz	NA	none	data/raw/geo
+stim_barcodes	https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2560nnn/GSM2560249/suppl/GSM2560249_barcodes.tsv.gz	NA	none	data/raw/geo
+batch2_genes	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE96nnn/GSE96583/suppl/GSE96583_batch2.genes.tsv.gz	NA	none	data/raw/geo
+batch2_cell_metadata	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE96nnn/GSE96583/suppl/GSE96583_batch2.total.tsne.df.tsv.gz	NA	none	data/raw/geo
+go_annotations	https://release.geneontology.org/2026-08-05/annotations/gaf/HUMAN-uniprot.gaf.gz	NA	none	data/raw/go
+go_ontology	https://release.geneontology.org/2026-08-05/ontology/go-basic.obo	NA	none	data/raw/go

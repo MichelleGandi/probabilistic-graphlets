@@ -1,0 +1,8 @@
+93aa4e9b530ef9d6411ca129b416324c5cc1cc5a01a1fa6ed4f4a845480ed3ca  data/raw/geo/GSE96583_batch2.genes.tsv.gz
+1d57e72e92ca8695250e88cc0f1c3fa8c0be1175d974f8b427c58f1274dc6c09  data/raw/geo/GSE96583_batch2.total.tsne.df.tsv.gz
+32add28a0b3397d9ef3f220b7a6a55e98e60fe7b66fe48d0986d634df8ca0013  data/raw/geo/GSM2560248_2.1.mtx.gz
+d58d8d55cbe4a12757207784b3bc9227bf200c9100ca15131176e9f8159c955e  data/raw/geo/GSM2560248_barcodes.tsv.gz
+8aecc98a7ac4957bbc2570f87ebe8ce97332a5bcdbf557d40bd5aabfd287bdc5  data/raw/geo/GSM2560249_2.2.mtx.gz
+9bb38e080dfae81036fbcd9902c6c6254a4466aa85f70705479be3b2d6679d55  data/raw/geo/GSM2560249_barcodes.tsv.gz
+a0afba19dfb1f8fa996bc1bdcd61fd0c9bd4cf0d2bf2509d09ac86993c0e70a2  data/raw/go/HUMAN-uniprot.gaf.gz
+b08d45b268b8c24ccb2513dbbbc7d4df9f6521c099b413f79eb31e06e0fa3bcc  data/raw/go/go-basic.obo

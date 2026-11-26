@@ -1,0 +1,3 @@
+sample	series	batch	condition	used_in_analysis	matrix	barcodes
+GSM2560248	GSE96583	batch2	ctrl	yes	data/raw/geo/GSM2560248_2.1.mtx.gz	data/raw/geo/GSM2560248_barcodes.tsv.gz
+GSM2560249	GSE96583	batch2	stim	no	data/raw/geo/GSM2560249_2.2.mtx.gz	data/raw/geo/GSM2560249_barcodes.tsv.gz
