@@ -5,7 +5,7 @@ name = "probabilistic-graphlets"
 description = "Gene function prediction from calibrated probabilistic graphlets in a monocyte co-expression network"
 authors = ["Michelle Gandidzanwa <Michelle.Gandidzanwa@mbzuai.ac.ae>"]
 channels = ["conda-forge", "bioconda"]
-platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+platforms = ["linux-64", "osx-arm64", "osx-64"]
 version = "0.1.0"
 
 [dependencies]
@@ -16,9 +16,30 @@ ipykernel = ">=7"
 pandas = ">=2"
 matplotlib = ">=3.9"
 papermill = ">=2.6"   # Quarto needs it for report parameters (-P)
+numpy = ">=2.5.5,<3"
+scipy = ">=1.18.1,<2"
+scikit-learn = ">=1.9.1,<2"
+networkx = ">=3.7,<4"
+pyyaml = ">=6.0.3,<7"
 
 [tasks]
 check = { cmd = "python --version && quarto --version", description = "Check that the tools work" }
+test = { cmd = "python tests/test_graphlets.py", description = "Check graphlet counting against exact enumeration" }
+
+# The analysis, one task per step. `depends-on` makes each step run the ones it needs first.
+download = { cmd = "bash scripts/download.sh", description = "Download the raw data listed in metadata/sources.tsv and check checksums" }
+verify = { cmd = "python scripts/01_verify_data.py", depends-on = ["download"], description = "Check the raw files and the cell metadata" }
+preprocess = { cmd = "python scripts/02_preprocess.py", depends-on = ["verify"], description = "Select CD14+ monocytes, filter genes, build metacells" }
+edge-confidence = { cmd = "python scripts/03_edge_confidence.py", depends-on = ["preprocess"], description = "Bootstrap cells within donors to estimate edge stability" }
+calibrate = { cmd = "python scripts/04_calibrate.py", depends-on = ["edge-confidence"], description = "Calibrate edge stability into replication probabilities" }
+networks = { cmd = "python scripts/05_networks.py", depends-on = ["calibrate"], description = "Build the probabilistic and binary networks" }
+graphlets = { cmd = "python scripts/06_graphlets.py", depends-on = ["networks"], description = "Count (expected) graphlet orbits for every network" }
+go-labels = { cmd = "python scripts/07_go_labels.py", depends-on = ["preprocess"], description = "Make GO biological process labels for the genes" }
+predict = { cmd = "python scripts/08_predict.py", depends-on = ["graphlets", "go-labels"], description = "Predict GO terms from each feature set (cross-validated)" }
+results = { cmd = "python scripts/09_results.py", depends-on = ["predict"], description = "Make the result tables and figures" }
+
 # `reproduce` must rebuild every result from the raw data with one command.
-# The lessons replace this placeholder with real steps.
-reproduce = { cmd = "python -c \"print('Nothing to reproduce yet: add your steps to the reproduce task in pixi.toml')\"", description = "Rebuild all results from raw data" }
+reproduce = { depends-on = ["results"], description = "Rebuild all results from raw data" }
+
+[pypi-dependencies]
+orbit-count = ">=0.1.0, <0.2"

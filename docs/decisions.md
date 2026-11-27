@@ -22,3 +22,18 @@ Choices made in this project and why, newest last. Settings themselves live in
   so `metadata/checksums.sha256` is the reference that anyone can check against.
 - **2026-11-27. Cell type: CD14+ monocytes, control condition, singlets only:** 2,785 cells,
   126–779 per donor.
+
+## Software environment
+
+- **2026-11-27. Platforms: linux-64, osx-arm64, osx-64; not win-64.** Graphlet counting uses
+  `orbit-count` (ORCA), which PyPI ships as built wheels for Linux and macOS only, with
+  no Windows wheel and no source package, so the environment cannot be built on Windows.
+  Windows users can run the project with the container image (lesson 08) or WSL.
+- **2026-11-27. `orbit-count` comes from PyPI** (`[pypi-dependencies]` in `pixi.toml`): it
+  is not packaged on conda-forge or bioconda. Its source is licensed GPL-3.0; this project
+  imports it but does not copy or distribute its code.
+- **2026-11-27. One task per analysis step, chained with `depends-on`;** `pixi run
+  reproduce` runs them all from the download onwards.
+- **2026-11-27. No separate test mode.** The full analysis on the real data took 2 min 34 s
+  on a MacBook Air (10 cores) including the checksum check, so the GitHub *Reproduce*
+  check and a partner can run the real analysis rather than a synthetic one.
