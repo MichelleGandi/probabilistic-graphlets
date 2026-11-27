@@ -1,7 +1,7 @@
 # Decisions
 
 Choices made in this project and why, newest last. Settings themselves live in
-`scripts/p36/config.py` (later `config/config.yaml`).
+`config/config.yaml`.
 
 ## Data
 
@@ -41,7 +41,7 @@ Choices made in this project and why, newest last. Settings themselves live in
 ## Method
 
 - **2026-11-27. Pairs never co-expressed in any bootstrap get edge probability 0**
-  (`ZERO_IF_NEVER_STABLE` in `scripts/p36/config.py`). Isotonic calibration maps stability 0
+  (`networks: zero_if_never_stable` in `config/config.yaml`). Isotonic calibration maps stability 0
   to the background replication rate (2–9 %), so in the first run every one of the
   1,263,255 gene pairs had p ≥ 0.01 and the probabilistic network was complete
   (density 1.0). A pair that never passes the co-expression threshold in any of the 100
@@ -51,3 +51,10 @@ Choices made in this project and why, newest last. Settings themselves live in
   0.076 (probabilistic GDV) vs 0.061 (binary, matched density), 0.054 (expected degree)
   and 0.084 (expression only). Because this change was made after seeing the first
   results, both runs are reported.
+
+## Automation
+
+- **2026-11-27. All analysis settings in `config/config.yaml`.** They used to be Python
+  constants in `scripts/p36/config.py`; that module now only reads the YAML file and works
+  out the folder paths, so the scripts are unchanged. Folder paths stay in code because
+  they are fixed by the project layout, not analysis choices.

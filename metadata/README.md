@@ -48,7 +48,7 @@ One row per GEO sample of batch 2.
 
 ## Cell metadata (`GSE96583_batch2.total.tsne.df.tsv.gz`)
 
-One row per cell barcode. The columns used by the code (see `scripts/p36/config.py`):
+One row per cell barcode. The columns used by the code (named under `dataset: metadata_columns` in `config/config.yaml`):
 
 | Column | Meaning |
 |--------|---------|
