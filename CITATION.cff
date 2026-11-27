@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite it as below."
 title: "Calibrated Probabilistic Graphlets"
-abstract: "Gene function prediction from calibrated probabilistic graphlets in a monocyte co-expression network"
+abstract: "Reproducible analysis testing whether graphlet features from a calibrated probabilistic gene co-expression network of CD14+ monocytes (GEO GSE96583) predict Gene Ontology biological process terms better than features from thresholded networks."
 type: software
 authors:
   - given-names: "Michelle"
@@ -11,4 +11,11 @@ authors:
 repository-code: "https://github.com/MichelleGandi/probabilistic-graphlets"
 license: MIT
 version: 0.1.0
-date-released: "2026-11-26"
+date-released: "2026-11-27"
+keywords:
+  - network biology
+  - graphlets
+  - probabilistic networks
+  - gene co-expression
+  - single-cell RNA-seq
+  - reproducibility
