@@ -43,6 +43,24 @@ Other entry points: `pixi task list` lists every task, one per analysis step (fo
 example `pixi run preprocess`), `pixi run test` checks the graphlet counting against
 exact enumeration.
 
+### Container image
+
+The software environment can also be run as a Docker image built from `pixi.lock`
+(`containers/Dockerfile`), for example on Windows. From the project folder:
+
+```bash
+docker build --platform linux/amd64 -f containers/Dockerfile \
+  --build-arg ENV_NAME=default -t probabilistic-graphlets:0.1.0 .
+docker run --rm --platform linux/amd64 -v "$PWD":/work -w /work probabilistic-graphlets:0.1.0 \
+  bash -c 'bash scripts/download.sh && for s in 01_verify_data 02_preprocess 03_edge_confidence 04_calibrate 05_networks 06_graphlets 07_go_labels 08_predict 09_results; do python scripts/$s.py || exit 1; done'
+```
+
+The image contains the software only, the project folder is in `/work` and the
+steps run in the same order as `pixi run reproduce` (without the report). Image built on
+2026-11-27 (linux/amd64): ID
+`sha256:e6f7afdfad84729e14f1e924d4643dfe6e87649abf391763aa98d68a93463138`. Run in the
+container, the analysis gave the same results.
+
 ## Hardware
 
 Measured on a MacBook Air (10 cores): about 1.2 GB of

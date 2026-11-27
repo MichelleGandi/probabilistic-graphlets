@@ -58,3 +58,16 @@ Choices made in this project and why, newest last. Settings themselves live in
   constants in `scripts/p36/config.py`; that module now only reads the YAML file and works
   out the folder paths, so the scripts are unchanged. Folder paths stay in code because
   they are fixed by the project layout, not analysis choices.
+- **2026-11-27. `curl` and `coreutils` (for `sha256sum`, `md5sum`) come from the Pixi
+  environment.** `scripts/download.sh` first used the system's `shasum`, which macOS and
+  GitHub's runner have but the container image (plain Ubuntu) does not. With these tools in
+  `pixi.toml`, every tool the analysis uses comes from the environment, and the download
+  script works the same on macOS, Linux and in the container.
+
+## Container
+
+- **2026-11-27. Container image for linux/amd64, built from `pixi.lock`** with the
+  template's `containers/Dockerfile`. The image holds the software only; the project is
+  mounted at `/work`. Run on an Apple Silicon Mac under emulation, the analysis gave
+  results identical to the native macOS run (median AUPR 0.076, 0.061, 0.084), so the
+  results do not depend on the operating system or processor.
