@@ -21,6 +21,7 @@ scipy = ">=1.18.1,<2"
 scikit-learn = ">=1.9.1,<2"
 networkx = ">=3.7,<4"
 pyyaml = ">=6.0.3,<7"
+tabulate = ">=0.10.0,<0.11"
 
 [tasks]
 check = { cmd = "python --version && quarto --version", description = "Check that the tools work" }
@@ -38,8 +39,10 @@ go-labels = { cmd = "python scripts/07_go_labels.py", depends-on = ["preprocess"
 predict = { cmd = "python scripts/08_predict.py", depends-on = ["graphlets", "go-labels"], description = "Predict GO terms from each feature set (cross-validated)" }
 results = { cmd = "python scripts/09_results.py", depends-on = ["predict"], description = "Make the result tables and figures" }
 
+report = { cmd = "quarto render reports/report.qmd", depends-on = ["results"], description = "Render the Quarto report from the results (reports/report.html)" }
+
 # `reproduce` must rebuild every result from the raw data with one command.
-reproduce = { depends-on = ["results"], description = "Rebuild all results from raw data" }
+reproduce = { depends-on = ["report"], description = "Rebuild all results and the report from raw data" }
 
 [pypi-dependencies]
 orbit-count = ">=0.1.0, <0.2"
