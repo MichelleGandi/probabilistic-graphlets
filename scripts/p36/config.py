@@ -30,6 +30,8 @@ TAU_QUANTILE = 0.99                # an edge is "co-expressed" in a resample if 
 
 # ---- Networks ----
 P_MIN = 0.01                       # probabilistic network keeps edges with calibrated p >= this
+ZERO_IF_NEVER_STABLE = True        # pairs never co-expressed in any bootstrap (stability 0) get p = 0:
+                                   # no evidence for the edge, so no probability (see docs/decisions.md)
 BINARY_THRESHOLDS = (0.5,)         # binary network 1: calibrated p >= 0.5 ("more likely than not to replicate")
 # binary network 2, "matched": the top-k edges by p, with k = expected edges of the probabilistic network
 #   (same density, so it differs from the probabilistic network ONLY in discarding uncertainty)

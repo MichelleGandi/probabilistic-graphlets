@@ -37,3 +37,17 @@ Choices made in this project and why, newest last. Settings themselves live in
 - **2026-11-27. No separate test mode.** The full analysis on the real data took 2 min 34 s
   on a MacBook Air (10 cores) including the checksum check, so the GitHub *Reproduce*
   check and a partner can run the real analysis rather than a synthetic one.
+
+## Method
+
+- **2026-11-27. Pairs never co-expressed in any bootstrap get edge probability 0**
+  (`ZERO_IF_NEVER_STABLE` in `scripts/p36/config.py`). Isotonic calibration maps stability 0
+  to the background replication rate (2–9 %), so in the first run every one of the
+  1,263,255 gene pairs had p ≥ 0.01 and the probabilistic network was complete
+  (density 1.0). A pair that never passes the co-expression threshold in any of the 100
+  resamples has no evidence for an edge, so its probability is set to 0. Results before
+  this change: median AUPR 0.056 (probabilistic GDV) vs 0.057 (binary, matched density).
+  After it: 390,929 candidate edges (density 0.31, 21,021 expected edges); median AUPR
+  0.076 (probabilistic GDV) vs 0.061 (binary, matched density), 0.054 (expected degree)
+  and 0.084 (expression only). Because this change was made after seeing the first
+  results, both runs are reported.
