@@ -1,0 +1,261 @@
+---
+title: "Calibrated probabilistic graphlets in a monocyte co-expression network"
+subtitle: "Do probabilistic graphlets predict gene function better than binary ones?"
+author: "Michelle Gandidzanwa"
+date: today
+format:
+  html:
+    embed-resources: true
+    toc: true
+    code-fold: true
+    code-tools: true
+execute:
+  warning: false
+bibliography: references.bib
+csl: vancouver.csl   # Vancouver (NLM citation-sequence) style, from the CSL project (CC BY-SA 3.0)
+jupyter: python3
+---
+
+```{python}
+#| label: setup
+#| include: false
+# Every number, table and figure below is read from results/ when the report renders.
+# Run `pixi run reproduce` first (the `report` task does this for you).
+import sys
+from pathlib import Path
+
+import matplotlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from IPython.display import Markdown
+
+T = Path("results/tables")
+size = pd.read_csv(T / "02_dataset_size.csv").iloc[0]
+donors = pd.read_csv(T / "01_selected_cells_per_donor.csv")
+edges = pd.read_csv(T / "03_edge_confidence_summary.csv").iloc[0]
+brier = pd.read_csv(T / "04_calibration_brier.csv")
+rel = pd.read_csv(T / "04_reliability.csv")
+nets = pd.read_csv(T / "05_networks.csv")
+mc = pd.read_csv(T / "06_monte_carlo_precision.csv").iloc[0]
+go = pd.read_csv(T / "07_go_coverage.csv").iloc[0]
+pred = pd.read_csv(T / "08_predictions_per_term.csv")
+summary = pd.read_csv(T / "09_summary_by_feature_set.csv").set_index("features")
+tests = pd.read_csv(T / "09_paired_tests.csv")
+
+PROB = "Probabilistic GDV"
+MATCHED = "Binary GDV (matched density)"
+prob_net = nets.set_index("network").loc["probabilistic"]
+matched_net = nets.set_index("network").loc["binary_matched"]
+vs_matched = tests[tests.comparison == f"{PROB} vs {MATCHED}"].iloc[0]
+vs_expr = tests[tests.comparison == f"{PROB} vs Expression only"].iloc[0]
+plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
+```
+
+## Question
+
+Genes whose local network wiring is similar, measured by their graphlet degree vectors
+(signatures), tend to share biological function [@milenkovic2008]. Gene co-expression
+networks, however, are usually made by thresholding correlations which treats
+every kept edge as certain and every other pair as absent. Probabilistic graphlets
+[@doriabelenguer2020] keep each edge's probability instead but the original work used raw
+scores as probabilities and found no gain for co-expression networks. 
+
+Here I ask:
+
+> Do graphlet features from a **calibrated** probabilistic co-expression network predict
+> gene function better than graphlet features from **binary** networks made from the same
+> data?
+
+## Data
+
+Single-cell RNA-seq of peripheral blood mononuclear cells from 8 donors with lupus
+[@kang2018; GEO GSE96583, batch 2]. I use the unstimulated, singlet CD14+ monocytes:
+`{python} f"{int(size.cells):,}"` cells after quality control, from
+`{python} int(size.donors)` donors and `{python} f"{int(size.genes):,}"` genes (detected in
+at least 10 % of cells, most variable, no mitochondrial or ribosomal genes).
+Gene function labels are Gene Ontology biological process terms [@ashburner2000]
+(release 2026-08-05, evidence codes IEA, ND and IEP excluded):
+`{python} f"{go.genes_with_BP_annotation:,}"` of the genes are annotated, and
+`{python} int(go.terms_used)` terms with `{python} go.term_size_range` genes are used.
+
+```{python}
+#| label: tbl-donors
+#| tbl-cap: "Unstimulated singlet CD14+ monocytes per donor, before the per-cell quality filter."
+d = donors.rename(columns={"ind": "Donor", "cells": "Cells"})
+d["Donor"] = d["Donor"].astype(int).astype(str)
+Markdown(d.to_markdown(index=False))
+```
+
+## Methods
+
+1. **Edge stability.** 
+   Cells were resampled with replacement within each donor 100 times,
+   summed into metacells of 10 cells and gene–gene Pearson correlations computed. A pair
+   counts as co-expressed in a resample if its correlation is at least
+   τ = `{python} f"{edges.tau:.3f}"` (the 99th percentile of all pairs in the full data).
+   Stability is the fraction of resamples in which a pair is co-expressed, computed on all
+   donors and separately on two halves of four donors.
+2. **Calibration.** 
+   Stability in one half of the donors was mapped, by isotonic
+   regression, to whether the pair is co-expressed in the *other* half. The edge
+   probability *p* is the probability that the association replicates in independent
+   donors. Pairs never co-expressed in any resample get *p* = 0 (see
+   `docs/decisions.md`).
+3. **Networks.** 
+   The *probabilistic* network keeps every pair with *p* ≥ 0.01 and its
+   probability. The *matched* binary network keeps the top pairs by *p*, as many as the
+   probabilistic network's expected number of edges, so the two differ only in discarding
+   uncertainty. The *naive* binary network keeps pairs with full-data correlation ≥ τ.
+4. **Graphlets.** 
+   Graphlet degree vectors (orbits 0–14) were counted with ORCA for the
+   binary networks and expected counts for the probabilistic network were estimated from
+   `{python} int(mc.realizations)` sampled realisations.
+5. **Function prediction.** 
+   For each GO term, logistic regression was trained on each
+   feature set (log-transformed, standardised) and scored by the area under the
+   precision–recall curve (AUPR) in 5-fold cross-validation repeated 3 times, with the same
+   folds for every feature set. Baselines: expected degree only and expression only
+   (three summary statistics and 20 principal components). Feature sets were compared per
+   term with the paired Wilcoxon test and Benjamini–Hochberg correction.
+
+## Results
+
+### Calibration
+
+```{python}
+#| label: fig-calibration
+#| fig-cap: "Reliability of edge scores, out of sample: the score of a gene pair in one half of the donors against how often the pair is co-expressed in the other half. Points on the dashed line are perfectly calibrated."
+#| fig-alt: "Line plot of observed replication rate against predicted probability, with a dashed diagonal for perfect calibration. Raw bootstrap stability (orange circles, solid line) lies far below the diagonal: pairs with high stability replicate much less often than their stability suggests. Calibrated probabilities (blue squares, dashed line) only reach about 0.45 and lie much nearer the diagonal: at 0.34 and 0.44 they replicate about 28 and 32 percent of the time, though the lowest bins scatter between 2 and 7 percent."
+fig, ax = plt.subplots(figsize=(5, 4))
+ax.plot([0, 1], [0, 1], ls=":", color="grey", lw=1, label="perfect calibration")
+for label, colour, marker, ls in (("raw stability", "#D55E00", "o", "-"), ("calibrated p", "#0072B2", "s", "--")):
+    r = rel[rel.score == label]
+    ax.plot(r.mean_score, r.observed, marker=marker, ls=ls, color=colour, label=label)
+ax.set_xlabel("Predicted probability of replication")
+ax.set_ylabel("Observed replication in the other donors")
+ax.legend(frameon=False)
+plt.tight_layout()
+plt.show()
+```
+
+Raw stability is over-confident: pairs found in almost every resample replicate in
+the other donors only about a quarter of the time. Calibrated probabilities are much
+closer to the observed replication but never exceed about 0.45, so no pair is more
+likely than not to replicate (@fig-calibration). The Brier score (mean squared error of
+the probabilities, lower is better) falls from `{python} f"{brier.brier_raw_stability.mean():.3f}"` to
+`{python} f"{brier.brier_calibrated.mean():.3f}"` on average over the two directions.
+
+### Networks
+
+```{python}
+#| label: tbl-networks
+#| tbl-cap: "The three networks. For the probabilistic network, edges are candidate pairs with p ≥ 0.01 and expected edges is the sum of their probabilities."
+n = nets.copy()
+n["network"] = n["network"].map({"probabilistic": "Probabilistic", "binary_matched": "Binary, matched density",
+                                 "binary_naive_r": "Binary, naive (r ≥ τ)"})
+n = n[["network", "genes_with_edges", "edges", "expected_edges", "mean_degree"]]
+n.columns = ["Network", "Genes with edges", "Edges", "Expected edges", "Mean degree"]
+Markdown(n.to_markdown(index=False, floatfmt=",.0f", intfmt=","))
+```
+
+Of `{python} f"{int(edges.pairs):,}"` gene pairs, `{python} f"{int(edges.pairs_stability_gt0):,}"`
+were co-expressed in at least one resample. The matched binary network has the same
+expected number of edges as the probabilistic network
+(`{python} f"{int(round(prob_net.expected_edges)):,}"`) but reaches only
+`{python} f"{int(matched_net.genes_with_edges):,}"` of the `{python} f"{int(size.genes):,}"`
+genes (@tbl-networks).
+
+### Function prediction
+
+```{python}
+#| label: tbl-summary
+#| tbl-cap: "Prediction of GO biological process terms by each feature set: median and mean AUPR over terms, median AUPR relative to random (the term's share of genes) and the share of terms predicted better than random."
+s = summary[["median_AUPR", "mean_AUPR", "median_fold_enrichment_over_random", "terms_better_than_random_%", "median_AUROC"]]
+s = s.sort_values("median_AUPR", ascending=False).reset_index()
+s.columns = ["Features", "Median AUPR", "Mean AUPR", "Median × random", "Terms > random (%)", "Median AUROC"]
+Markdown(s.to_markdown(index=False, floatfmt=".3f"))
+```
+
+```{python}
+#| label: fig-aupr
+#| fig-cap: "AUPR relative to random for every GO term and feature set (log scale). Boxes show the median and quartiles, the dashed line is random guessing."
+#| fig-alt: "Horizontal box plots of AUPR fold enrichment over random, one box per feature set, on a log scale from about 0.8 to 20, with a dashed vertical line at 1 for random guessing. Expression only and probabilistic GDV have the highest medians, both a little above 2; the two binary GDV sets are near 1.9 and degree only is lowest near 1.6. All boxes lie mostly to the right of the random line."
+order = summary.sort_values("median_AUPR").index.tolist()
+data = [pred.loc[pred.features == f, "aupr_fold_enrichment"].values for f in order]
+fig, ax = plt.subplots(figsize=(6.5, 3.5))
+ax.boxplot(data, orientation="horizontal", tick_labels=order, showfliers=False, widths=0.6)
+ax.axvline(1, ls="--", color="grey", lw=1)
+ax.set_xscale("log")
+ax.set_xlabel("AUPR ÷ random (log scale)")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: fig-paired
+#| fig-cap: "AUPR of each GO term with probabilistic graphlets against matched-density binary graphlets. Points above the diagonal are terms where probabilistic graphlets do better."
+#| fig-alt: "Scatter plot of 702 GO terms, AUPR with binary matched-density graphlets on the x axis and with probabilistic graphlets on the y axis, both on log scales from about 0.01 to 0.4, with a dashed diagonal. About three quarters of the points lie above the diagonal, most of them close to it, showing that probabilistic graphlets give a somewhat higher AUPR for most terms."
+w = pred.pivot(index="term", columns="features", values="aupr")
+fig, ax = plt.subplots(figsize=(4.5, 4.5))
+ax.scatter(w[MATCHED], w[PROB], s=8, alpha=0.5, color="#0072B2")
+lim = [w[[MATCHED, PROB]].min().min() * 0.9, w[[MATCHED, PROB]].max().max() * 1.1]
+ax.plot(lim, lim, ls="--", color="grey", lw=1)
+ax.set_xscale("log"); ax.set_yscale("log")
+ax.set_xlabel(f"AUPR, {MATCHED}"); ax.set_ylabel(f"AUPR, {PROB}")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-tests
+#| tbl-cap: "Probabilistic graphlets against each other feature set, paired over GO terms: median difference in AUPR, share of terms where probabilistic graphlets do better and the Benjamini–Hochberg-corrected Wilcoxon q-value."
+t = tests[["comparison", "terms", "median_AUPR_difference", "probabilistic_wins_%", "BH_q"]].copy()
+t["comparison"] = t["comparison"].str.replace(f"{PROB} vs ", "", regex=False)
+t["BH_q"] = t["BH_q"].map(lambda q: "< 0.0001" if q < 1e-4 else f"{q:.4f}")
+t.columns = ["Probabilistic GDV vs", "Terms", "Median AUPR difference", "Probabilistic better (%)", "q"]
+Markdown(t.to_markdown(index=False, floatfmt=".4f"))
+```
+
+Probabilistic graphlets predict GO terms better than binary graphlets from the same data
+at the same expected density: median AUPR `{python} f"{summary.loc[PROB, 'median_AUPR']:.3f}"`
+against `{python} f"{summary.loc[MATCHED, 'median_AUPR']:.3f}"`, better on
+`{python} f"{vs_matched['probabilistic_wins_%']:.0f}"` % of the
+`{python} int(vs_matched.terms)` terms (@fig-paired, @tbl-tests). They also beat the
+naive binary network and expected degree, but not the expression features themselves
+(median AUPR `{python} f"{summary.loc['Expression only', 'median_AUPR']:.3f}"`; probabilistic
+graphlets better on only `{python} f"{vs_expr['probabilistic_wins_%']:.0f}"` % of terms).
+
+## Discussion
+
+Once edge probabilities are calibrated and pairs with no evidence are given probability
+zero, probabilistic graphlets capture gene function better than graphlets of thresholded
+networks, unlike in the original study [@doriabelenguer2020]. The gains are moderate: all
+methods are only about two to three times better than random and the expression profiles
+from which the network is built remain the best predictor.
+
+Limitations:
+
+- Setting *p* = 0 for pairs never seen in any resample was decided after a first run, in
+  which every pair received a small probability and probabilistic graphlets did slightly
+  *worse* than binary ones. Both runs are reported in `docs/decisions.md`.
+- The matched binary network leaves some genes without edges, while the probabilistic
+  network reaches every gene, part of the gain may come from this coverage.
+- One dataset, one cell type and one way of building the network.
+
+## Software
+
+```{python}
+#| label: versions
+import networkx, scipy, sklearn
+print(f"Python {sys.version.split()[0]}, numpy {np.__version__}, pandas {pd.__version__}, "
+      f"scipy {scipy.__version__}, scikit-learn {sklearn.__version__}, networkx {networkx.__version__}, "
+      f"matplotlib {matplotlib.__version__}")
+```
+
+The exact versions of every package are in `pixi.lock`.
+
+## References
+
+::: {#refs}
+:::
