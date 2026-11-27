@@ -1,42 +1,52 @@
-"""All settings for the pipeline live here. Change a value here, not inside the scripts."""
+"""Settings for the pipeline.
+
+The values come from config/config.yaml: change them there, not here. This module only
+reads that file and works out the folder paths, so the scripts can keep using
+`from p36 import config as C` and names like `C.N_BOOTSTRAP`.
+"""
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]   # scripts/p36/config.py -> project folder
+CONFIG_FILE = ROOT / "config" / "config.yaml"
+with open(CONFIG_FILE) as fh:
+    _c = yaml.safe_load(fh)
+
+# ---- Folders (fixed by the project layout) ----
 RAW = ROOT / "data" / "raw"            # downloaded files (GEO + Gene Ontology)
 INTERIM = ROOT / "data" / "processed"  # intermediate files written by the scripts (rebuilt by code)
 RESULTS = ROOT / "results"
 TABLES = RESULTS / "tables"
 FIGURES = RESULTS / "figures"
 
-SEED = 7
+SEED = int(_c["seed"])
 
-# ---- Dataset: Kang et al. 2018, GEO GSE96583, batch 2 (8 lupus donors, 10x Chromium) ----
-GEO_ACCESSION = "GSE96583"
-CONDITION = "ctrl"                 # unstimulated cells only (the other condition is IFN-beta "stim")
-CELL_TYPE = "CD14+ Monocytes"      # cell-type label used in the GEO metadata table
-META_COLS = {"donor": "ind", "condition": "stim", "cell_type": "cell", "multiplet": "multiplets"}
+# ---- Dataset ----
+GEO_ACCESSION = _c["dataset"]["geo_accession"]
+CONDITION = _c["dataset"]["condition"]
+CELL_TYPE = _c["dataset"]["cell_type"]
+META_COLS = dict(_c["dataset"]["metadata_columns"])
 
 # ---- Cell and gene filtering ----
-MIN_GENES_PER_CELL = 200           # drop cells with fewer detected genes
-GENE_MIN_DETECTION = 0.10          # keep genes detected in >= 10% of the selected cells
-N_GENES = 2000                     # then keep this many most variable genes
-EXCLUDE_GENE_PREFIXES = ("MT-", "RPL", "RPS")   # mitochondrial and ribosomal genes
+MIN_GENES_PER_CELL = int(_c["filtering"]["min_genes_per_cell"])
+GENE_MIN_DETECTION = float(_c["filtering"]["gene_min_detection"])
+N_GENES = int(_c["filtering"]["n_genes"])
+EXCLUDE_GENE_PREFIXES = tuple(_c["filtering"]["exclude_gene_prefixes"])
 
 # ---- Edge confidence by resampling ----
-METACELL_SIZE = 10                 # cells summed into one metacell (reduces single-cell sparsity)
-N_BOOTSTRAP = 100                  # resamples of cells within each donor
-TAU_QUANTILE = 0.99                # an edge is "co-expressed" in a resample if r >= the 99th percentile
-                                   # of all gene-pair correlations in the full data (fixed threshold tau)
+METACELL_SIZE = int(_c["edge_confidence"]["metacell_size"])
+N_BOOTSTRAP = int(_c["edge_confidence"]["n_bootstrap"])
+TAU_QUANTILE = float(_c["edge_confidence"]["tau_quantile"])
 
 # ---- Networks ----
-P_MIN = 0.01                       # probabilistic network keeps edges with calibrated p >= this
-ZERO_IF_NEVER_STABLE = True        # pairs never co-expressed in any bootstrap (stability 0) get p = 0:
-                                   # no evidence for the edge, so no probability (see docs/decisions.md)
-BINARY_THRESHOLDS = (0.5,)         # binary network 1: calibrated p >= 0.5 ("more likely than not to replicate")
-# binary network 2, "matched": the top-k edges by p, with k = expected edges of the probabilistic network
-#   (same density, so it differs from the probabilistic network ONLY in discarding uncertainty)
-# binary network 3, "naive": raw correlation r >= tau, no resampling (what a typical analysis does)
-MIN_EDGES = 50                     # a binary network with fewer edges is skipped (reported in step 5)
+P_MIN = float(_c["networks"]["p_min"])
+ZERO_IF_NEVER_STABLE = bool(_c["networks"]["zero_if_never_stable"])
+BINARY_THRESHOLDS = tuple(float(t) for t in _c["networks"]["binary_thresholds"])
+MIN_EDGES = int(_c["networks"]["min_edges"])
+# Other networks, built in step 5: "matched" = the top-k pairs by p, with k = expected edges of the
+# probabilistic network (same density, differs only in discarding uncertainty); "naive" = raw
+# correlation r >= tau, no resampling (what a typical analysis does).
 
 NETWORK_LABELS = {"probabilistic": "Probabilistic GDV", "binary_matched": "Binary GDV (matched density)",
                   "binary_naive_r": "Binary GDV (naive r >= tau)"}
@@ -44,17 +54,17 @@ for _t in BINARY_THRESHOLDS:
     NETWORK_LABELS[f"binary_p{_t:g}"] = f"Binary GDV (p >= {_t:g})"
 
 # ---- Probabilistic graphlets ----
-N_REALIZATIONS = 100               # Monte Carlo samples of the probabilistic network
+N_REALIZATIONS = int(_c["graphlets"]["n_realizations"])
 
 # ---- Gene Ontology labels ----
-GO_EXCLUDE_EVIDENCE = {"IEA", "ND", "IEP"}   # electronic, no data, and expression-based evidence
-GO_TERM_MIN_GENES = 20
-GO_TERM_MAX_GENES = 200
+GO_EXCLUDE_EVIDENCE = set(_c["gene_ontology"]["exclude_evidence"])
+GO_TERM_MIN_GENES = int(_c["gene_ontology"]["term_min_genes"])
+GO_TERM_MAX_GENES = int(_c["gene_ontology"]["term_max_genes"])
 
 # ---- Prediction ----
-N_FOLDS = 5
-N_REPEATS = 3
-N_EXPR_PCS = 20                    # expression-only baseline: 20 principal components + 3 summary stats
+N_FOLDS = int(_c["prediction"]["n_folds"])
+N_REPEATS = int(_c["prediction"]["n_repeats"])
+N_EXPR_PCS = int(_c["prediction"]["n_expression_pcs"])
 
 for _d in (RAW, INTERIM, TABLES, FIGURES):
     _d.mkdir(parents=True, exist_ok=True)

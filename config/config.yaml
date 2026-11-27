@@ -1,0 +1,47 @@
+# Settings for the analysis. Change a value here, not in the code.
+# Read by scripts/p36/config.py (and later by the Snakemake workflow).
+# Why each value was chosen is recorded in docs/decisions.md.
+
+seed: 7                            # random seed for resampling, Monte Carlo and cross-validation
+
+dataset:                           # Kang et al. 2018, GEO GSE96583, batch 2 (8 donors, 10x Chromium)
+  geo_accession: GSE96583
+  condition: ctrl                  # unstimulated cells only (the other condition is IFN-beta "stim")
+  cell_type: "CD14+ Monocytes"     # cell-type label in the GEO cell metadata table
+  metadata_columns:                # column names in GSE96583_batch2.total.tsne.df.tsv.gz
+    donor: ind
+    condition: stim
+    cell_type: cell
+    multiplet: multiplets
+
+filtering:
+  min_genes_per_cell: 200          # drop cells with fewer detected genes
+  gene_min_detection: 0.10         # keep genes detected in at least this fraction of cells
+  n_genes: 2000                    # then keep at most this many most variable genes
+  exclude_gene_prefixes: ["MT-", "RPL", "RPS"]   # mitochondrial and ribosomal genes
+
+edge_confidence:
+  metacell_size: 10                # cells summed into one metacell (reduces single-cell sparsity)
+  n_bootstrap: 100                 # resamples of cells within each donor
+  tau_quantile: 0.99               # co-expressed in a resample if r >= this quantile of all
+                                   # gene-pair correlations in the full data (fixed threshold tau)
+
+networks:
+  p_min: 0.01                      # probabilistic network keeps pairs with calibrated p >= this
+  zero_if_never_stable: true       # pairs never co-expressed in any resample get p = 0
+  binary_thresholds: [0.5]         # binary network(s): calibrated p >= each value
+  min_edges: 50                    # a binary network with fewer edges is skipped
+
+graphlets:
+  n_realizations: 100              # Monte Carlo samples of the probabilistic network
+
+gene_ontology:
+  exclude_evidence: [IEA, ND, IEP] # electronic, no-data and expression-based annotations
+  term_min_genes: 20
+  term_max_genes: 200
+
+prediction:
+  n_folds: 5
+  n_repeats: 3
+  n_expression_pcs: 20             # expression-only baseline: this many principal components
+                                   # plus 3 summary statistics
