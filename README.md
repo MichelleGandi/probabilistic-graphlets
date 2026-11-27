@@ -34,14 +34,15 @@ pixi run reproduce
 ```
 
 `pixi run reproduce` installs the exact software versions in `pixi.lock`, downloads the
-raw data and checks its checksums, runs every analysis step and renders the report. All
+raw data and checks its checksums, runs every analysis step through the Snakemake
+workflow in `workflow/Snakefile` and renders the report. All
 settings are in `config/config.yaml`. A GitHub Action
 (`.github/workflows/reproduce.yml`) runs the same command on a fresh machine on every
 push.
 
-Other entry points: `pixi task list` lists every task, one per analysis step (for
-example `pixi run preprocess`), `pixi run test` checks the graphlet counting against
-exact enumeration.
+Other entry points: `pixi run dry-run` shows which steps Snakemake would run (after a
+change, only the affected steps rerun); `pixi run test` checks the graphlet counting
+against exact enumeration; `pixi task list` lists every task.
 
 ### Container image
 

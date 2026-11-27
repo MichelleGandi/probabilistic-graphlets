@@ -1,0 +1,193 @@
+# Calibrated probabilistic graphlets: the whole analysis as a Snakemake workflow.
+#
+# One rule per analysis step. Snakemake connects the rules through their input and
+# output files and reruns a step only when one of its inputs changed: its data, its
+# script, or the settings in config/config.yaml.
+#
+# Run from the project folder:  pixi run reproduce
+# (or: pixi run snakemake -s workflow/Snakefile --cores all)
+# Dry run, to see what would run:  pixi run snakemake -s workflow/Snakefile -n
+
+import csv
+from pathlib import Path
+
+CONFIG = "config/config.yaml"
+configfile: CONFIG
+
+# Raw files: every file listed in metadata/sources.tsv (folder + file name from the URL)
+with open("metadata/sources.tsv") as fh:
+    RAW = [f"{row['dest']}/{Path(row['url']).name}" for row in csv.DictReader(fh, delimiter="\t")]
+GEO_RAW = [f for f in RAW if f.startswith("data/raw/geo/")]
+GO_RAW = [f for f in RAW if f.startswith("data/raw/go/")]
+
+P = "data/processed"   # intermediate files
+T = "results/tables"
+F = "results/figures"
+
+
+rule all:
+    input:
+        "reports/report.html",
+
+
+# The raw data are read-only and never change, so this rule has no inputs: it runs only
+# when a raw file is missing (on a fresh clone), never just because the download script
+# or metadata/ were edited. The script also checks every file against
+# metadata/checksums.sha256.
+rule download:
+    output:
+        RAW,
+    shell:
+        "bash scripts/download.sh"
+
+
+rule verify:
+    input:
+        GEO_RAW,
+        CONFIG,
+        script="scripts/01_verify_data.py",
+    output:
+        f"{T}/01_cells_by_type_condition.csv",
+        f"{T}/01_selected_cells_per_donor.csv",
+    shell:
+        "python {input.script}"
+
+
+rule preprocess:
+    input:
+        GEO_RAW,
+        CONFIG,
+        f"{T}/01_selected_cells_per_donor.csv",   # run after the data check
+        script="scripts/02_preprocess.py",
+    output:
+        f"{P}/cells.csv",
+        f"{P}/counts.npz",
+        f"{P}/genes.csv",
+        f"{T}/02_dataset_size.csv",
+    shell:
+        "python {input.script}"
+
+
+rule edge_confidence:
+    input:
+        f"{P}/cells.csv",
+        f"{P}/counts.npz",
+        CONFIG,
+        script="scripts/03_edge_confidence.py",
+    output:
+        f"{P}/edge_scores.npz",
+        f"{T}/03_edge_confidence_summary.csv",
+    shell:
+        "python {input.script}"
+
+
+rule calibrate:
+    input:
+        f"{P}/edge_scores.npz",
+        CONFIG,
+        script="scripts/04_calibrate.py",
+    output:
+        f"{P}/edge_p.npy",
+        f"{T}/04_calibration_brier.csv",
+        f"{T}/04_calibration_map.csv",
+        f"{T}/04_reliability.csv",
+        f"{F}/04_calibration.png",
+    shell:
+        "python {input.script}"
+
+
+rule networks:
+    input:
+        f"{P}/edge_p.npy",
+        f"{P}/edge_scores.npz",
+        f"{P}/genes.csv",
+        CONFIG,
+        script="scripts/05_networks.py",
+    output:
+        f"{P}/net_probabilistic.csv",
+        f"{T}/05_networks.csv",   # also lists the binary networks that were kept
+    shell:
+        "python {input.script}"
+
+
+rule graphlets:
+    input:
+        f"{P}/net_probabilistic.csv",
+        f"{T}/05_networks.csv",
+        f"{P}/genes.csv",
+        CONFIG,
+        script="scripts/06_graphlets.py",
+    output:
+        f"{P}/gdv_probabilistic.csv",
+        f"{P}/gdv_probabilistic_se.csv",
+        f"{T}/06_monte_carlo_precision.csv",
+    shell:
+        "python {input.script}"
+
+
+rule go_labels:
+    input:
+        GO_RAW,
+        f"{P}/genes.csv",
+        CONFIG,
+        script="scripts/07_go_labels.py",
+    output:
+        f"{P}/go_labels.csv",
+        f"{T}/07_go_coverage.csv",
+        f"{T}/07_go_terms.csv",
+    shell:
+        "python {input.script}"
+
+
+rule predict:
+    input:
+        f"{P}/cells.csv",
+        f"{P}/counts.npz",
+        f"{P}/genes.csv",
+        f"{P}/gdv_probabilistic.csv",
+        f"{P}/go_labels.csv",
+        f"{T}/05_networks.csv",
+        CONFIG,
+        script="scripts/08_predict.py",
+    output:
+        f"{T}/08_feature_sets.csv",
+        f"{T}/08_predictions_per_term.csv",
+    shell:
+        "python {input.script}"
+
+
+rule results:
+    input:
+        f"{T}/05_networks.csv",
+        f"{T}/08_predictions_per_term.csv",
+        CONFIG,
+        script="scripts/09_results.py",
+    output:
+        f"{T}/09_summary_by_feature_set.csv",
+        f"{T}/09_paired_tests.csv",
+        f"{F}/05_network_sizes.png",
+        f"{F}/09_aupr_by_feature_set.png",
+        f"{F}/09_probabilistic_vs_best_binary.png",
+    shell:
+        "python {input.script}"
+
+
+rule report:
+    input:
+        "_quarto.yml",
+        "reports/references.bib",
+        "reports/vancouver.csl",
+        f"{T}/01_selected_cells_per_donor.csv",
+        f"{T}/02_dataset_size.csv",
+        f"{T}/03_edge_confidence_summary.csv",
+        f"{T}/04_calibration_brier.csv",
+        f"{T}/04_reliability.csv",
+        f"{T}/06_monte_carlo_precision.csv",
+        f"{T}/07_go_coverage.csv",
+        f"{T}/09_summary_by_feature_set.csv",
+        f"{T}/09_paired_tests.csv",
+        qmd="reports/report.qmd",
+    output:
+        "reports/report.html",
+    shell:
+        "quarto render {input.qmd}"

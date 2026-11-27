@@ -33,7 +33,8 @@ Choices made in this project and why, newest last. Settings themselves live in
   is not packaged on conda-forge or bioconda. Its source is licensed GPL-3.0; this project
   imports it but does not copy or distribute its code.
 - **2026-11-27. One task per analysis step, chained with `depends-on`;** `pixi run
-  reproduce` runs them all from the download onwards.
+  reproduce` runs them all from the download onwards. (Replaced by the Snakemake workflow,
+  see Automation.)
 - **2026-11-27. No separate test mode.** The full analysis on the real data took 2 min 34 s
   on a MacBook Air (10 cores) including the checksum check, so the GitHub *Reproduce*
   check and a partner can run the real analysis rather than a synthetic one.
@@ -63,6 +64,12 @@ Choices made in this project and why, newest last. Settings themselves live in
   GitHub's runner have but the container image (plain Ubuntu) does not. With these tools in
   `pixi.toml`, every tool the analysis uses comes from the environment, and the download
   script works the same on macOS, Linux and in the container.
+
+- **2026-11-27. Snakemake workflow (`workflow/Snakefile`) instead of one Pixi task per
+  step.** One rule per analysis step, connected through input and output files; each rule
+  also lists its script and `config/config.yaml` as inputs, so a change to the code or the
+  settings reruns that step and everything after it, and nothing else. `pixi run
+  reproduce` runs the workflow. Nextflow was not used: one workflow manager is enough.
 
 ## Container
 
