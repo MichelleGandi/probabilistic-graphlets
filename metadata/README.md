@@ -29,7 +29,7 @@ Sources (checked 2026-11-27):
 ## checksums.sha256
 
 SHA-256 checksum of every raw file. Check with
-`shasum -a 256 -c metadata/checksums.sha256` (or `sha256sum -c` on Linux);
+`pixi run sha256sum -c metadata/checksums.sha256` (`sha256sum` comes from the Pixi environment);
 `scripts/download.sh` does this at the end.
 
 ## samples.tsv

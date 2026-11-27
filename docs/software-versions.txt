@@ -19,6 +19,7 @@ bleach-with-css                6.4.0         hac0b51c_0              4.30 KiB  c
 brotli                         1.2.1         hf00d406_1             20.21 KiB  conda  https://conda.anaconda.org/conda-forge
 brotli-bin                     1.2.1         he4a93e4_1             18.46 KiB  conda  https://conda.anaconda.org/conda-forge
 bzip2                          1.0.8         h4e30115_10           122.04 KiB  conda  https://conda.anaconda.org/conda-forge
+c-ares                         1.34.9        h74c22ad_0            197.25 KiB  conda  https://conda.anaconda.org/conda-forge
 ca-certificates                2026.11.20    hbd8a1cb_0            120.72 KiB  conda  https://conda.anaconda.org/conda-forge
 cairo                          1.18.6        hf699903_2            821.81 KiB  conda  https://conda.anaconda.org/conda-forge
 certifi                        2026.11.20    pyhd8ed1ab_0           13.52 KiB  conda  https://conda.anaconda.org/conda-forge
@@ -28,7 +29,9 @@ click                          8.5.1         pyh5ded981_0          110.27 KiB  c
 cloudpickle                    3.1.3         pyh5ded981_0           26.95 KiB  conda  https://conda.anaconda.org/conda-forge
 comm                           0.2.3         pyhe01879c_0           14.35 KiB  conda  https://conda.anaconda.org/conda-forge
 contourpy                      1.4.0         py313hce73dc9_2       283.80 KiB  conda  https://conda.anaconda.org/conda-forge
+coreutils                      9.12          h74c22ad_0              1.69 MiB  conda  https://conda.anaconda.org/conda-forge
 cpython                        3.13.18       py313hd8ed1ab_100      48.92 KiB  conda  https://conda.anaconda.org/conda-forge
+curl                           8.23.0        h48bb406_1            179.80 KiB  conda  https://conda.anaconda.org/conda-forge
 cycler                         0.12.1        pyhcf101f3_2           14.43 KiB  conda  https://conda.anaconda.org/conda-forge
 dart-sass                      1.101.0       h820172f_0              3.59 MiB  conda  https://conda.anaconda.org/conda-forge
 debugpy                        1.8.22        py313h10a4758_1         2.63 MiB  conda  https://conda.anaconda.org/conda-forge
@@ -92,9 +95,11 @@ libbrotlicommon                1.2.1         h1dcdb26_1             77.86 KiB  c
 libbrotlidec                   1.2.1         h5295a6a_1             29.29 KiB  conda  https://conda.anaconda.org/conda-forge
 libbrotlienc                   1.2.1         h2ddc9cb_1            289.00 KiB  conda  https://conda.anaconda.org/conda-forge
 libcblas                       3.11.0        12_hb0561ab_openblas   17.79 KiB  conda  https://conda.anaconda.org/conda-forge
+libcurl                        8.23.0        h48bb406_1            415.22 KiB  conda  https://conda.anaconda.org/conda-forge
 libcxx                         23.1.6        hc645fd0_0            553.35 KiB  conda  https://conda.anaconda.org/conda-forge
 libdeflate                     1.26          h72bfca4_0             54.02 KiB  conda  https://conda.anaconda.org/conda-forge
 libedit                        3.1.20260512  pl5321h26f1114_0      105.97 KiB  conda  https://conda.anaconda.org/conda-forge
+libev                          4.33          h1a92334_3             39.05 KiB  conda  https://conda.anaconda.org/conda-forge
 libexpat                       2.11.0        h367fcd6_0             71.37 KiB  conda  https://conda.anaconda.org/conda-forge
 libffi                         3.7.0         h47dc5ef_1             42.61 KiB  conda  https://conda.anaconda.org/conda-forge
 libfreetype                    2.14.3        hce30654_2              8.17 KiB  conda  https://conda.anaconda.org/conda-forge
@@ -110,12 +115,15 @@ libjpeg-turbo                  3.2.1         hb001647_0            542.58 KiB  c
 liblapack                      3.11.0        12_hd9741b5_openblas   17.83 KiB  conda  https://conda.anaconda.org/conda-forge
 liblzma                        5.8.3         h8088a28_1             89.57 KiB  conda  https://conda.anaconda.org/conda-forge
 libmpdec                       4.0.0         h84a0fba_2             71.57 KiB  conda  https://conda.anaconda.org/conda-forge
+libnghttp2                     1.71.0        h29223de_0            655.78 KiB  conda  https://conda.anaconda.org/conda-forge
 libopenblas                    0.3.34        openmp_h5e6e99c_1       4.05 MiB  conda  https://conda.anaconda.org/conda-forge
 libpng                         1.6.59        hf5e6511_0            283.50 KiB  conda  https://conda.anaconda.org/conda-forge
+libpsl                         0.23.1        h08d577c_2             70.89 KiB  conda  https://conda.anaconda.org/conda-forge
 libpython                      3.13.18       h0af5753_100_cp313      1.74 MiB  conda  https://conda.anaconda.org/conda-forge
 libraqm                        0.11.0        h45af499_0             30.60 KiB  conda  https://conda.anaconda.org/conda-forge
 libsodium                      1.0.22        h74c22ad_3            243.56 KiB  conda  https://conda.anaconda.org/conda-forge
 libsqlite                      3.54.1        h9f98c0b_1            931.18 KiB  conda  https://conda.anaconda.org/conda-forge
+libssh2                        1.11.1        hbf2880b_2            279.15 KiB  conda  https://conda.anaconda.org/conda-forge
 libtiff                        4.7.2         h2d8d499_3            372.39 KiB  conda  https://conda.anaconda.org/conda-forge
 libwebp-base                   1.6.0         h202fb40_1            287.62 KiB  conda  https://conda.anaconda.org/conda-forge
 libxcb                         1.17.0        hbffa61f_3            318.67 KiB  conda  https://conda.anaconda.org/conda-forge
