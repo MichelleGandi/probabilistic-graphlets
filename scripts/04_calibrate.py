@@ -32,6 +32,13 @@ print(ev.to_string(index=False))
 
 iso = fit(np.concatenate([s_a, s_b]), np.concatenate([called_b, called_a]))
 p = 0.5 * (iso.predict(s_a) + iso.predict(s_b))
+if C.ZERO_IF_NEVER_STABLE:
+    # Isotonic regression gives stability 0 the background replication rate (a few %), which would
+    # put a small probability on every gene pair. A pair never co-expressed in any bootstrap has no
+    # evidence for an edge, so it gets p = 0.
+    never = E["s_full"] == 0
+    p[never] = 0.0
+    print(f"Pairs never co-expressed in any bootstrap (p set to 0): {int(never.sum()):,}")
 np.save(C.INTERIM / "edge_p.npy", p.astype(np.float32))
 grid = np.linspace(0, 1, 101)
 pd.DataFrame({"stability": grid, "calibrated_p": iso.predict(grid)}).to_csv(C.TABLES / "04_calibration_map.csv", index=False)
